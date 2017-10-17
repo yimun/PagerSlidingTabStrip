@@ -45,7 +45,7 @@ public class QuickContactFragment extends DialogFragment {
 
 		pager.setAdapter(adapter);
 
-		tabs.setViewPager(pager);
+		tabs.setupWithViewPager(pager);
 
 		return root;
 	}
