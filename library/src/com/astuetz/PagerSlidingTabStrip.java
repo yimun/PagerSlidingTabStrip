@@ -31,6 +31,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IdRes;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
@@ -48,6 +49,7 @@ import com.astuetz.pagerslidingtabstrip.R;
 
 import java.util.Locale;
 
+@ViewPager.DecorView
 public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	public interface IconTabProvider {
@@ -122,13 +124,15 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	private int lastScrollX = 0;
 
-	private int tabBackgroundResId = R.drawable.background_tab;
+	private int tabBackgroundResId = 0;
 
 	private int fixedIndicatorWidth = 0;
 	private boolean roundIndicator = false;
-	private int customIndicatorId = 0;
+	private @IdRes
+	int customIndicatorId = 0;
 	private Bitmap customIndicator;
 	private int indicatorOffset = 0;
+	private int indicatorPaddingBottom = 0;
 
 	private Locale locale;
 
@@ -193,6 +197,7 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 			customIndicator = BitmapFactory.decodeResource(getResources(), customIndicatorId);
 		}
 		indicatorOffset = a.getDimensionPixelSize(R.styleable.PagerSlidingTabStrip_pstsIndicatorOffset, indicatorOffset);
+		indicatorPaddingBottom = a.getDimensionPixelOffset(R.styleable.PagerSlidingTabStrip_pstsIndicatorPaddingBottom, indicatorPaddingBottom);
 
 		a.recycle();
 
@@ -229,7 +234,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		if (pagerAdapterObserver == null) {
 			pagerAdapterObserver = new PagerAdapterObserver();
 		} else {
-			pager.getAdapter().unregisterDataSetObserver(pagerAdapterObserver);
+			try {
+				pager.getAdapter().unregisterDataSetObserver(pagerAdapterObserver);
+			} catch (IllegalStateException e) {
+			}
 		}
 		pager.getAdapter().registerDataSetObserver(pagerAdapterObserver);
 
@@ -344,8 +352,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		for (int i = 0; i < tabCount; i++) {
 
 			View v = tabsContainer.getChildAt(i);
-
-			v.setBackgroundResource(tabBackgroundResId);
+			if (tabBackgroundResId > 0) {
+				// FIXME 4.1手机上setBackGround后有可能导致padding丢失
+				v.setBackgroundResource(tabBackgroundResId);
+			}
 
 			if (!(pager.getAdapter() instanceof ViewTabProvider) && v instanceof TextView) {
 
@@ -460,12 +470,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		}
 
 		if (customIndicator != null) {
-			canvas.drawBitmap(customIndicator, lineLeft, height - customIndicator.getHeight(), rectPaint);
+			canvas.drawBitmap(customIndicator, lineLeft, height - customIndicator.getHeight() - indicatorPaddingBottom, rectPaint);
 		} else if (roundIndicator) {
-			RectF rectF = new RectF(lineLeft, height - indicatorHeight, lineRight, height);
-			canvas.drawRoundRect(rectF, height / 2, height / 2, rectPaint);
+			RectF rectF = new RectF(lineLeft, height - indicatorHeight - indicatorPaddingBottom, lineRight, height - indicatorPaddingBottom);
+			canvas.drawRoundRect(rectF, indicatorHeight / 2, indicatorHeight / 2, rectPaint);
 		} else {
-			canvas.drawRect(lineLeft, height - indicatorHeight, lineRight, height, rectPaint);
+			canvas.drawRect(lineLeft, height - indicatorHeight - indicatorPaddingBottom, lineRight, height - indicatorPaddingBottom, rectPaint);
 		}
 	}
 

@@ -17,6 +17,7 @@
         <attr name="pstsRoundIndicator" format="boolean"/>
         <attr name="pstsCustomIndicator" format="reference"/>
         <attr name="pstsIndicatorOffset" format="dimension"/>
+        <attr name="pstsIndicatorPaddingBottom" format="dimension"/>
     </declare-styleable>
 
 </resources>
